@@ -1,9 +1,12 @@
 {
   "port": 8080,
-  "hostname": "*",
-  "directory": "",
-  "forbidden": [
-    "/var/www/html/foo",
-    "/var/www/html/bar"
+  "hosts": [
+    {
+      "hostname": "*",
+      "directory": "",
+      "forbidden": [
+        "/foobar"
+      ]
+    }
   ]
 }

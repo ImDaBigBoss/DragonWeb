@@ -75,6 +75,10 @@ public class RequestHeaders {
         return headers;
     }
     public String getHeader(String header) {
-        return headers.get(header);
+        if (headers.containsKey(header)) {
+            return headers.get(header);
+        } else {
+            return "";
+        }
     }
 }

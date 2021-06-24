@@ -1,4 +1,4 @@
-package com.github.imdabigboss.dragonweb.utils;
+package com.github.imdabigboss.dragonweb.utils.config;
 
 import java.io.*;
 import java.net.*;
@@ -16,9 +16,6 @@ import org.json.simple.parser.ParseException;
 
 public class Config {
     private int DEFAULT_PORT = 8080;
-    private String DEFAULT_HOSTNAME = "*";
-    private String DEFAULT_DIRECTORY = "";
-    private List<String> DEFAULT_FORBIDDEN = new ArrayList<>();
 
     private JSONObject config = null;
 
@@ -95,43 +92,30 @@ public class Config {
 
         return (int) ((long) config.get("port"));
     }
-    public String getHostname() {
+    public List<HostConfig> getHosts() {
         if (config == null) {
             DragonWeb.getLogger().error("Config is null.");
-            return DEFAULT_HOSTNAME;
+            return new ArrayList<>();
         }
-        if (!config.containsKey("hostname")) {
-            DragonWeb.getLogger().warning("Your config does not have an entry for the hostname to serve on.");
-            return DEFAULT_HOSTNAME;
-        }
-
-        return (String) config.get("hostname");
-    }
-    public String getDirectory() {
-        if (config == null) {
-            DragonWeb.getLogger().error("Config is null.");
-            return DEFAULT_DIRECTORY;
-        }
-        if (!config.containsKey("directory")) {
-            DragonWeb.getLogger().error("Your config does not have an entry for a directory to serve.");
-            return DEFAULT_DIRECTORY;
-        }
-
-        return (String) config.get("directory");
-    }
-    public List<String> getForbidden() {
-        if (config == null) {
-            DragonWeb.getLogger().error("Config is null.");
-            return DEFAULT_FORBIDDEN;
-        }
-        if (!config.containsKey("forbidden")) {
+        if (!config.containsKey("hosts")) {
             DragonWeb.getLogger().warning("Your config does not have an entry for forbidden files/directories");
-            return DEFAULT_FORBIDDEN;
+            return new ArrayList<>();
         }
 
-        JSONArray forbidden = (JSONArray) config.get("forbidden");
-        List<String> out = new ArrayList<>();
-        forbidden.forEach(f -> out.add((String) f));
+        JSONArray hosts = (JSONArray) config.get("hosts");
+        List<HostConfig> out = new ArrayList<>();
+        hosts.forEach(c -> {
+            JSONObject obj = (JSONObject) c;
+
+            if (obj.containsKey("hostname") && obj.containsKey("directory") && obj.containsKey("forbidden")) {
+                String hostname = (String) obj.get("hostname");
+                String directory = (String) obj.get("directory");
+                JSONArray forbiddenArr = (JSONArray) obj.get("forbidden");
+                List<String> forbidden = new ArrayList<>();
+                forbiddenArr.forEach(f -> forbidden.add((String) f));
+                out.add(new HostConfig(hostname, directory, forbidden));
+            }
+        });
         return out;
     }
 

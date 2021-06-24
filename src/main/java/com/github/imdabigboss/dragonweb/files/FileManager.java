@@ -1,6 +1,7 @@
 package com.github.imdabigboss.dragonweb.files;
 
 import com.github.imdabigboss.dragonweb.DragonWeb;
+import com.github.imdabigboss.dragonweb.utils.config.HostConfig;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,9 +35,9 @@ public class FileManager {
         }
     }
 
-    public static boolean canServeFile(String path) {
+    public static boolean canServeFile(String path, HostConfig config) {
         boolean canServe = true;
-        for (String file : DragonWeb.getForbidden()) {
+        for (String file : config.getForbidden()) {
             File fobj = new File(file);
             if (fobj.isDirectory()) {
                 if (path.startsWith(file)) {
