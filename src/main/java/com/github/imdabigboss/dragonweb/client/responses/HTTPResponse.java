@@ -49,7 +49,7 @@ public class HTTPResponse {
         String body;
         try {
             URL url = Resources.getResource("error_page.html");
-            body = Resources.toString(url, StandardCharsets.UTF_8).replace("%ERROR_TEXT%", code.getCode() + " " + code.toString());
+            body = Resources.toString(url, StandardCharsets.UTF_8).replace("%ERROR_TEXT%", code.getCode() + " " + code);
         } catch (IOException e) {
             DragonWeb.getLogger().error("DragonWeb was unable to find the error page code. This should not happen. Please contact a developer.");
             body = code.toString();

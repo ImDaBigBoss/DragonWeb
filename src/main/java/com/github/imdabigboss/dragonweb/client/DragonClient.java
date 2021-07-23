@@ -105,7 +105,7 @@ public class DragonClient extends Thread {
                     for (HostConfig config : DragonWeb.getHosts()) {
                         if (config.checkHostname(config.getHostname(), req.getHeader("Host"))) {
                             String absolutePath = config.getDirectory() + req.getPath();
-                            DragonWeb.getLogger().info("Got request for " + req.getPath() + " (" + absolutePath + ")");
+                            DragonWeb.getLogger().info("Got request for " + req.getPath() + " (" + absolutePath + ") at " + req.getHeader("Host"));
 
                             if (new File(absolutePath).isDirectory()) {
                                 if (FileManager.fileExists(absolutePath + "index.html")) {

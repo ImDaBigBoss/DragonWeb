@@ -1,5 +1,7 @@
 package com.github.imdabigboss.dragonweb.utils.config;
 
+import com.github.imdabigboss.dragonweb.DragonWeb;
+
 import java.util.List;
 
 public class HostConfig {
@@ -46,11 +48,16 @@ public class HostConfig {
         } else if (hostname.contains(".") && reqHostname.contains(".")) {
             int upTo = 0;
             boolean isOk = true;
-            String[] hostnameArray = hostname.split(".");
-            String[] reqHostnameArray = reqHostname.split(".");
+            String[] hostnameArray = hostname.split("\\.");
+            String[] reqHostnameArray = reqHostname.split("\\.");
 
-            while (upTo < hostnameArray.length || upTo < reqHostnameArray.length) {
-                if (hostnameArray[upTo] != "*" && hostnameArray[upTo] != reqHostnameArray[upTo]) {
+            while (upTo < hostnameArray.length) {
+                if (upTo >= reqHostnameArray.length) {
+                    isOk = false;
+                    break;
+                }
+
+                if (!hostnameArray[upTo].equals("*") && !hostnameArray[upTo].equals(reqHostnameArray[upTo])) {
                     isOk = false;
                     break;
                 }
