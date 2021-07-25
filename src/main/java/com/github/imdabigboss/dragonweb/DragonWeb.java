@@ -5,6 +5,7 @@ import com.github.imdabigboss.dragonweb.utils.config.Config;
 import com.github.imdabigboss.dragonweb.utils.Logger;
 import com.github.imdabigboss.dragonweb.utils.config.HostConfig;
 
+import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -24,6 +25,13 @@ public class DragonWeb {
     private static Config config;
 
     public static void main(String[] args) {
+        if (System.console() == null) {
+            int selectedOption = JOptionPane.showConfirmDialog(null, "DragonWeb has no console. Do you want to run this anyway? You will not be able to stop the process as it will have no window!", "DragonWeb: Error", JOptionPane.YES_NO_OPTION);
+            if (selectedOption != JOptionPane.YES_OPTION) {
+                return;
+            }
+        }
+
         System.setProperty("java.net.preferIPv4Stack" , "true"); //Force IPv4
 
         if (!(new File(STARTUP_PATH + "/logs/")).exists()) {
