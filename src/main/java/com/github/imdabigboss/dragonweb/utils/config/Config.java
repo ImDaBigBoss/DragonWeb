@@ -1,12 +1,7 @@
 package com.github.imdabigboss.dragonweb.utils.config;
 
-import java.io.*;
-import java.net.*;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.github.imdabigboss.dragonweb.DragonWeb;
+
 import com.google.common.io.Resources;
 
 import org.json.simple.JSONArray;
@@ -14,8 +9,18 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import java.io.*;
+
+import java.net.*;
+
+import java.nio.charset.StandardCharsets;
+
+import java.util.ArrayList;
+import java.util.List;
+
 public class Config {
-    private int DEFAULT_PORT = 8080;
+    private final int DEFAULT_PORT = 8080;
+    private final boolean DEFAULT_SHOW_DEBUG = false;
 
     private JSONObject config = null;
 
@@ -91,6 +96,18 @@ public class Config {
         }
 
         return (int) ((long) config.get("port"));
+    }
+    public boolean getShowDebug() {
+        if (config == null) {
+            DragonWeb.getLogger().error("Config is null.");
+            return DEFAULT_SHOW_DEBUG;
+        }
+        if (!config.containsKey("show_debug")) {
+            DragonWeb.getLogger().warning("Your config does not have an entry for the showDebug option.");
+            return DEFAULT_SHOW_DEBUG;
+        }
+
+        return (boolean) config.get("show_debug");
     }
     public List<HostConfig> getHosts() {
         if (config == null) {

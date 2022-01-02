@@ -1,28 +1,21 @@
 package com.github.imdabigboss.dragonweb;
 
-import com.github.imdabigboss.dragonweb.client.DragonClient;
+import com.github.imdabigboss.dragonweb.server.DragonServer;
 import com.github.imdabigboss.dragonweb.utils.config.Config;
 import com.github.imdabigboss.dragonweb.utils.Logger;
-import com.github.imdabigboss.dragonweb.utils.config.HostConfig;
 
 import javax.swing.*;
-import java.io.File;
-import java.io.IOException;
-import java.net.ServerSocket;
 
-import java.util.List;
+import java.io.IOException;
 
 public class DragonWeb {
-    public static final long START_TIME = System.currentTimeMillis();
-    public static final String STARTUP_PATH = System.getProperty("user.dir");
+    private static String STARTUP_PATH = null;
 
-    private static boolean listening = true;
-
-    private static List<HostConfig> hosts;
-    private static int port;
-
+    private static DragonServer server;
     private static Logger logger;
     private static Config config;
+
+    private static boolean mainThreadRunning = true;
 
     public static void main(String[] args) {
         if (System.console() == null) {
@@ -34,42 +27,45 @@ public class DragonWeb {
 
         System.setProperty("java.net.preferIPv4Stack" , "true"); //Force IPv4
 
-        if (!(new File(STARTUP_PATH + "/logs/")).exists()) {
-            (new File(STARTUP_PATH + "/logs/")).mkdirs();
-        }
-        logger = new Logger(STARTUP_PATH + "/logs/server.log");
+        STARTUP_PATH = System.getProperty("user.dir");
+
+        logger = new Logger(STARTUP_PATH + "/logs/");
         logger.info("DragonWeb server starting...");
 
         logger.info("Loading config...");
         config = new Config();
         config.saveDefaultConfig();
         config.loadConfig();
+        logger.setShowDebug(config.getShowDebug());
 
-        port = config.getPort();
-        hosts = config.getHosts();
+        server = new DragonServer();
 
-        if (hosts == null) {
-            DragonWeb.getLogger().error("Your configuration is wrong.");
-            return;
-        }
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            shutdown();
+        }));
 
         try {
-            ServerSocket serverSocket = new ServerSocket(port);
-            logger.info("Serving: on port: " + port);
-
-            while (listening) {
-                new DragonClient(serverSocket.accept());
+            server.listen();
+            if (!server.isListening()) {
+                logger.info("DragonWeb server stopped.");
+            } else {
+                logger.warning("DragonWeb server returned. Not good.");
             }
+            mainThreadRunning = false;
         } catch (IOException e) {
             DragonWeb.getLogger().logException(e);
         }
     }
 
-    public static int getPort() {
-        return port;
-    }
-    public static List<HostConfig> getHosts() {
-        return hosts;
+    public static void shutdown() {
+        DragonWeb.getLogger().info("DragonWeb server stopping...");
+        server.shutdown();
+
+        while (mainThreadRunning) {
+            
+        }
+
+        logger.info("All done. Shutting down...");
     }
 
     public static Logger getLogger() {
@@ -77,5 +73,11 @@ public class DragonWeb {
     }
     public static Config getConfig() {
         return config;
+    }
+    public static DragonServer getServer() {
+        return server;
+    }
+    public static String getStartupPath() {
+        return STARTUP_PATH;
     }
 }

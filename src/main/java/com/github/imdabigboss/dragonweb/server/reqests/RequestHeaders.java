@@ -1,4 +1,4 @@
-package com.github.imdabigboss.dragonweb.client.reqests;
+package com.github.imdabigboss.dragonweb.server.reqests;
 
 import com.github.imdabigboss.dragonweb.client.responses.HTTPCodes;
 

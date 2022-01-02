@@ -1,4 +1,4 @@
-package com.github.imdabigboss.dragonweb.client.reqests;
+package com.github.imdabigboss.dragonweb.server.reqests;
 
 public enum ReqestType {
     GET,

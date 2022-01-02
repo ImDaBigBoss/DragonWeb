@@ -1,7 +1,5 @@
 package com.github.imdabigboss.dragonweb.utils.config;
 
-import com.github.imdabigboss.dragonweb.DragonWeb;
-
 import java.util.List;
 
 public class HostConfig {

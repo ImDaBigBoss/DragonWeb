@@ -1,51 +1,60 @@
 package com.github.imdabigboss.dragonweb.client;
 
 import com.github.imdabigboss.dragonweb.DragonWeb;
-import com.github.imdabigboss.dragonweb.client.reqests.RequestHeaders;
-import com.github.imdabigboss.dragonweb.client.responses.HTTPCodes;
 import com.github.imdabigboss.dragonweb.client.responses.HTTPResponse;
-import com.github.imdabigboss.dragonweb.files.FileManager;
-import com.github.imdabigboss.dragonweb.utils.Utils;
-import com.github.imdabigboss.dragonweb.utils.config.HostConfig;
+import com.github.imdabigboss.dragonweb.server.reqests.RequestHeaders;
+import com.github.imdabigboss.dragonweb.client.responses.HTTPCodes;
 
 import java.io.*;
 import java.net.*;
-import java.util.List;
 
 public class DragonClient extends Thread {
     private Socket clientSocket;
-    private PrintWriter out = null;
+    private OutputStream output = null;
+	private InputStream input = null;
     private BufferedReader in = null;
 
-    public DragonClient(Socket clientSocket) {
-        this.clientSocket = clientSocket;
+    private int clientID;
+    private boolean listening;
 
-        DragonWeb.getLogger().info("Client connected (" + clientSocket.getInetAddress() + ")");
+    public DragonClient(Socket clientSocket, int clientID) {
+        this.clientSocket = clientSocket;
+        this.clientID = clientID;
+		this.listening = true;
+
+        DragonWeb.getLogger().debug("Client connected (" + clientSocket.getInetAddress() + ") at ID " + clientID);
+		this.setName("DragonClient-" + clientID);
 
         try {
-            InputStream input = clientSocket.getInputStream();
+            input = clientSocket.getInputStream();
             in = new BufferedReader(new InputStreamReader(input));
 
-            OutputStream output = clientSocket.getOutputStream();
-            out = new PrintWriter(output, true);
+            output = clientSocket.getOutputStream();
 
             this.start();
         } catch (IOException e) {
             DragonWeb.getLogger().logException(e);
         }
-    }
+	}
 
     public RequestHeaders readRequest() throws IOException {
         RequestHeaders req = new RequestHeaders();
 
         boolean isFirst = true;
-        while (true) {
+        while (listening) {
             String input = in.readLine();
+            if (!listening) {
+				req.errorCode = HTTPCodes.CODE_500;
+                break;
+            }
 
             if (input == null) {
                 continue;
             } else if (input.equals("")) {
-                break;
+                if (isFirst) {
+                    req.errorCode = HTTPCodes.CODE_400;
+                }
+				break;
             }
 
             if (isFirst) {
@@ -62,87 +71,67 @@ public class DragonClient extends Thread {
         return req;
     }
 
-    public void sendResponse(List<String> response) {
-        for (String line : response) {
-            out.println(line);
+    public void cleanup() {
+        try {
+			if (clientSocket != null) {
+                clientSocket.close();
+            }
+			if (input != null) {
+				input.close();
+			}
+            if (in != null) {
+                in.close();
+            }
+            if (output != null) {
+                output.close();
+            }
+        } catch (IOException e) {
+            DragonWeb.getLogger().logException(e);
         }
-        out.flush();
-    }
-
-    public void sendResponse(String response) {
-        out.println(response);
-        out.flush();
     }
 
     public void closeConnection() {
-        try {
-            in.close();
-            out.close();
-            clientSocket.close();
-        } catch (IOException e) {
+        cleanup();
+        listening = false;
+        DragonWeb.getLogger().debug("Connection closed at ID " + clientID + " by Server");
+    }
 
-        }
+    public OutputStream getOutput() {
+        return output;
+    }
+
+    public int getClientID() {
+        return clientID;
     }
 
     public void run() {
-        if (out == null || in == null) {
-            try {
-                clientSocket.close();
-            } catch (IOException e) {
-                DragonWeb.getLogger().logException(e);
-            }
+        if (output == null || in == null || clientSocket == null) {
+            cleanup();
             return;
         }
 
         try {
-            while (true) {
+            while (listening) {
                 RequestHeaders req = readRequest();
-                if (req.errorCode != HTTPCodes.CODE_200) {
-                    DragonWeb.getLogger().info("Got invalid request");
-                    sendResponse(HTTPResponse.httpResponse("HTTP/1.0", HTTPCodes.CODE_400));
-                } else {
-                    boolean didRespond = false;
-                    for (HostConfig config : DragonWeb.getHosts()) {
-                        if (config.checkHostname(config.getHostname(), req.getHeader("Host"))) {
-                            String absolutePath = config.getDirectory() + req.getPath();
-                            DragonWeb.getLogger().info("Got request for " + req.getPath() + " (" + absolutePath + ") at " + req.getHeader("Host"));
 
-                            if (new File(absolutePath).isDirectory()) {
-                                if (FileManager.fileExists(absolutePath + "index.html")) {
-                                    absolutePath += "index.html";
-                                } else if (FileManager.fileExists(absolutePath + "index.htm")) {
-                                    absolutePath += "index.htm";
-                                } else {
-                                    sendResponse(HTTPResponse.httpResponse(req.getHTTPVersion(), HTTPCodes.CODE_404));
-                                    continue;
-                                }
-                            }
+                long time = System.currentTimeMillis();
+                HTTPResponse response = DragonWeb.getServer().processRequest(this, req);
+                time = System.currentTimeMillis() - time;
+                DragonWeb.getLogger().debug("Request processed in " + time + "ms");
 
-                            if (!FileManager.fileExists(absolutePath)) {
-                                sendResponse(HTTPResponse.httpResponse(req.getHTTPVersion(), HTTPCodes.CODE_404));
-                                continue;
-                            }
-                            if (!FileManager.canServeFile(absolutePath, config)) {
-                                sendResponse(HTTPResponse.httpResponse(req.getHTTPVersion(), HTTPCodes.CODE_403));
-                                continue;
-                            }
-
-                            String mime = FileManager.getFileMime(absolutePath);
-                            String body = Utils.readFileContents(absolutePath);
-                            sendResponse(HTTPResponse.httpResponse(req.getHTTPVersion(), HTTPCodes.CODE_200, body, mime));
-
-                            didRespond = true;
-                            break;
-                        }
-                    }
-
-                    if (!didRespond) {
-                        sendResponse(HTTPResponse.httpResponse(req.getHTTPVersion(), HTTPCodes.CODE_404));
-                    }
+                response.send();
+                if (response.getShouldClose()) {
+                    closeConnection();
+                    return;
                 }
             }
+
+            if (!listening) {
+                closeConnection();
+            }
         } catch (IOException e) {
-            DragonWeb.getLogger().info("Client disconnected");
+            DragonWeb.getLogger().debug("Connection closed at ID " + clientID + " by Client");
+            cleanup();
         }
     }
 }

@@ -1,10 +1,10 @@
-package com.github.imdabigboss.dragonweb.files;
+package com.github.imdabigboss.dragonweb.server.files;
 
-import com.github.imdabigboss.dragonweb.DragonWeb;
 import com.github.imdabigboss.dragonweb.utils.config.HostConfig;
 
 import java.io.File;
 import java.io.IOException;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 

@@ -29,6 +29,8 @@ Thumbs.db
 $RECYCLE.BIN/
 Desktop.ini
 
+# VS Code
+.vscode/
 
 # Maven
 log/
@@ -43,3 +45,7 @@ bin/
 build/
 /bin1/
 java/build/**
+
+# This project
+/logs/
+/config.json
