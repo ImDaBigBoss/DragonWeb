@@ -85,9 +85,11 @@ public class DragonClient extends Thread {
             if (output != null) {
                 output.close();
             }
-        } catch (IOException e) {
-            DragonWeb.getLogger().logException(e);
-        }
+
+			DragonWeb.getServer().getClients().remove(clientID);
+		} catch (IOException e) {
+			DragonWeb.getLogger().logException(e);
+		}
     }
 
     public void closeConnection() {
@@ -130,8 +132,8 @@ public class DragonClient extends Thread {
                 closeConnection();
             }
         } catch (IOException e) {
+			cleanup();
             DragonWeb.getLogger().debug("Connection closed at ID " + clientID + " by Client");
-            cleanup();
         }
     }
 }

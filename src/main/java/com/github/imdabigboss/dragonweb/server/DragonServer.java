@@ -126,13 +126,15 @@ public class DragonServer {
 			while (client.isAlive()) {
 				
 			}
-
-            clients.remove(client.getClientID());
-			DragonWeb.getLogger().info("Connection ID " + client.getClientID() + " stopped.");
+			DragonWeb.getLogger().debug("Connection ID " + client.getClientID() + " stopped.");
         }
     }
 
     public boolean isListening() {
         return listening;
     }
+
+	public Map<Integer, DragonClient> getClients() {
+		return clients;
+	}
 }

@@ -64,8 +64,6 @@ public class HostConfig {
             }
 
             return isOk;
-        } else if (reqHostname.equals("")) {
-            return true;
         } else {
             return false;
         }

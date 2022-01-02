@@ -115,7 +115,7 @@ public class Config {
             return new ArrayList<>();
         }
         if (!config.containsKey("hosts")) {
-            DragonWeb.getLogger().warning("Your config does not have an entry for forbidden files/directories");
+            DragonWeb.getLogger().warning("Your config does not have an entry for hosts");
             return new ArrayList<>();
         }
 
@@ -127,11 +127,15 @@ public class Config {
             if (obj.containsKey("hostname") && obj.containsKey("directory") && obj.containsKey("forbidden")) {
                 String hostname = (String) obj.get("hostname");
                 String directory = (String) obj.get("directory");
+
                 JSONArray forbiddenArr = (JSONArray) obj.get("forbidden");
                 List<String> forbidden = new ArrayList<>();
                 forbiddenArr.forEach(f -> forbidden.add((String) f));
+
                 out.add(new HostConfig(hostname, directory, forbidden));
-            }
+            } else {
+				DragonWeb.getLogger().error("You have errors in you config.json file. Check that the hosts are setup correctly.");
+			}
         });
         return out;
     }
