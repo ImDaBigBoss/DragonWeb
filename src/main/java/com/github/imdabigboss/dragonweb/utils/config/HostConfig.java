@@ -38,6 +38,9 @@ public class HostConfig {
         if (hostname.contains(":")) {
             hostname = hostname.split(":")[0];
         }
+		if (reqHostname.contains(":")) {
+            reqHostname = reqHostname.split(":")[0];
+        }
 
         if (hostname.equals("*")) {
             return true;

@@ -74,6 +74,7 @@ public class DragonServer {
                 }
             }
 
+			DragonWeb.getLogger().info("Got request for " + req.getPath() + " at " + req.getHeader("Host") + " but no host was found");
             return new HTTPResponse(req.getHTTPVersion(), HTTPCodes.CODE_404, client.getOutput());
         }
     }
